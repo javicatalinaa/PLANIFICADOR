@@ -337,28 +337,49 @@ tbody td{padding:9px 12px;vertical-align:middle}
   margin:0 12px;
 }
 
-/* ── TOGGLE VISTA ── */
-.btn-view{
-  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
-  color:#fff;width:34px;height:34px;border-radius:8px;
-  font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .15s;flex-shrink:0;
+/* ── DRAWER TABS ── */
+.drawer-tabs{display:flex;border-bottom:1px solid var(--brd);margin:-4px 0 16px;gap:0}
+.dtab{background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--mut);padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;
+  transition:color .15s,border-color .15s;white-space:nowrap;font-family:inherit}
+.dtab:hover{color:var(--txt)}
+.dtab.on{color:var(--pink);border-bottom-color:var(--pink)}
+.dpane{display:none}.dpane.on{display:block}
+/* ── TEXTAREA NOTAS ── */
+.nota-ta{width:100%;min-height:38px;background:var(--bg);border:1.5px solid var(--brd);
+  border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:var(--txt);
+  resize:none;outline:none;line-height:1.55;overflow:hidden;transition:border-color .15s}
+.nota-ta:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(233,30,140,.1)}
+.nota-ta::placeholder{color:var(--mut);font-style:italic}
+.nota-saved{font-size:10px;color:var(--grn);font-weight:600;opacity:0;transition:opacity .3s}
+.nota-saved.on{opacity:1}
+.nota-badge{font-size:11px;margin-left:4px;opacity:.7;cursor:pointer}
+.nota-badge:hover{opacity:1}
+/* ── RECEPCION BOX ── */
+.rec-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.rec-cell{text-align:center}
+.rec-lbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.rec-val{font-size:22px;font-weight:800;font-family:var(--mn);letter-spacing:-1px;line-height:1}
+.rec-sub{font-size:9px;color:var(--mut);margin-top:2px}
+.rec-item{display:flex;align-items:center;justify-content:space-between;
+  border-radius:7px;padding:8px 12px;margin-bottom:5px}
+.rec-item.prox{background:var(--pink-0);border:1px solid var(--pink-1)}
+.rec-item.sig{background:var(--bg);border:1px solid var(--brd)}
+
+
+/* ── POPUP NOTA ── */
+.nota-popup{
+  position:fixed;z-index:500;
+  background:#1e1229;color:#fff;
+  border:1px solid rgba(233,30,140,.4);border-radius:10px;
+  padding:12px 14px;max-width:280px;font-size:12px;line-height:1.6;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  animation:popIn .15s ease;pointer-events:none;
 }
-.btn-view:hover{background:rgba(255,255,255,.3)}
-/* Vista móvil forzada en escritorio */
-body.mobile-view .tc-scroll{max-width:420px;margin:0 auto}
-body.mobile-view main{max-width:480px;margin:0 auto}
-body.mobile-view .hide-mobile{display:none!important}
-body.mobile-view .kpi-row{grid-template-columns:1fr 1fr}
-body.mobile-view input[type=search]{width:140px}
-body.mobile-view .drawer{width:100%;max-width:480px;right:auto;left:50%;transform:translateX(-50%) translateY(0)}
-body.mobile-view .drawer.on{transform:translateX(-50%) translateY(0)}
-/* Vista escritorio forzada en móvil */
-body.desktop-view .hide-mobile{display:table-cell!important}
-body.desktop-view main{max-width:1600px}
-body.desktop-view .kpi-row{grid-template-columns:repeat(4,1fr)}
-body.desktop-view input[type=search]{width:210px}
-body.desktop-view .tc-scroll{overflow-x:auto}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.nota-popup-title{font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:rgba(233,30,140,.8);margin-bottom:5px}
+
 </style>
 </head>
 <body>
@@ -403,8 +424,7 @@ body.desktop-view .tc-scroll{overflow-x:auto}
     </div>
   </div>
   <div class="header-right">
-    <span class="dtag" id="dtag">📅 18 Aug 2026</span>
-    <button class="btn-view" id="btn-view" onclick="toggleView()" title="Cambiar vista">🖥️</button>
+    <span class="dtag" id="dtag">📅 —</span>
     <button class="btn-up" onclick="openModal()"><span class="pulse"></span>Actualizar stock</button>
     <div class="user-pill">
       <div class="user-av">JO</div>
@@ -428,7 +448,7 @@ body.desktop-view .tc-scroll{overflow-x:auto}
 <!-- PLAN PANE -->
 <div class="pane on" id="pane-plan">
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-l">Total Materiales</div><div class="kpi-v kv-p" id="kt">79</div></div>
+    <div class="kpi"><div class="kpi-l">Total Materiales</div><div class="kpi-v kv-p" id="kt">71</div></div>
     <div class="kpi"><div class="kpi-l">Requieren Compra</div><div class="kpi-v kv-y" id="kb">—</div></div>
     <div class="kpi"><div class="kpi-l">Bajo Stock Seg.</div><div class="kpi-v kv-r" id="kl">—</div></div>
     <div class="kpi"><div class="kpi-l">Stock Check 👍</div><div class="kpi-v kv-g" id="ko">—</div></div>
@@ -478,17 +498,16 @@ body.desktop-view .tc-scroll{overflow-x:auto}
 const BBDD=[
   {sap:'600019',desc:'PAPEL HIGIENICO 4x500 MT',prov:'BAÑADOS',fe:4,cm:'4600000142',pos:20,centro:'4010',cap:200,ss:200},
   {sap:'600016',desc:'TOALLA AUTOCORTE',prov:'BAÑADOS',fe:2,cm:'4600000142',pos:10,centro:'4010',cap:120,ss:100},
-  {sap:'400046',desc:'CTN CAJA PAN MIGA',prov:'CHILEMPACK',fe:300,cm:'4600000155',pos:30,centro:'4010',cap:300,ss:300},
+  {sap:'400046',desc:'CTN  CAJA PAN MIGA',prov:'CHILEMPACK',fe:300,cm:'4600000155',pos:30,centro:'4010',cap:300,ss:300},
   {sap:'400051',desc:'ROLLO PAPEL 60X40 CMS',prov:'CONVERTIDORA LM',fe:6,cm:'4600000414',pos:10,centro:'4010',cap:24,ss:3},
-  {sap:'400002',desc:'BOLS.PEBD 60*70+20 - 30 MC',prov:'COPOL',fe:100,cm:'4600000197',pos:20,centro:'4010',cap:15000,ss:8000},
-  {sap:'400284',desc:'ETIQ SATO MOTEX6600 LOTE/CONSUMIR',prov:'CRISME',fe:150,cm:'4600000188',pos:40,centro:'4010',cap:8000,ss:200},
-  {sap:'400012',desc:'RODILLO ENTINTADOR 6600',prov:'CRISME',fe:100,cm:'4600000188',pos:10,centro:'4010',cap:1000,ss:50},
+  {sap:'400284',desc:'ETIQ SATO MOTEX6600 LOTE/CONSUMIR_CRISME',prov:'CRISME',fe:150,cm:'4600000188',pos:40,centro:'4010',cap:8000,ss:300},
+  {sap:'400012',desc:'RODILLO ENTINTADOR  6600',prov:'CRISME',fe:100,cm:'4600000188',pos:10,centro:'4010',cap:1000,ss:100},
   {sap:'400003',desc:'CAPSULA P.BIZCOCHUELO',prov:'ECOPLASTICS',fe:100,cm:'4600000166',pos:120,centro:'4010',cap:60000,ss:500},
-  {sap:'400013',desc:'PAPEL CALUGA BLCO. 71x42',prov:'ECOPLASTICS',fe:500,cm:'4600000166',pos:90,centro:'4010',cap:20000,ss:5000},
-  {sap:'400032',desc:'PAPEL CERESINADO 9,5x11,5x16',prov:'ECOPLASTICS',fe:100,cm:'4600000166',pos:110,centro:'4010',cap:60000,ss:4000},
-  {sap:'400117',desc:'PAPEL CERESINADO CASTAÑO 22X24 CM',prov:'ECOPLASTICS',fe:100,cm:'4600000166',pos:150,centro:'4010',cap:60000,ss:1000},
-  {sap:'400645',desc:'PAPEL NATURAL PLIEGO 59,5X39,5',prov:'ECOPLASTICS',fe:500,cm:'4600000166',pos:130,centro:'4010',cap:30000,ss:2000},
-  {sap:'600256',desc:'GAS AGA PAC 2.7 70% N2-30% CO2',prov:'GALLIUM',fe:90,cm:'4600000320',pos:10,centro:'4010',cap:270,ss:90},
+  {sap:'400013',desc:'PAPEL CALUGA BLCO. 71x42',prov:'ECOPLASTICS',fe:1,cm:'4600000166',pos:90,centro:'4010',cap:200,ss:70,um_label:'resmas'},
+  {sap:'400032',desc:'PAPEL CERESINADO 9,5x11,5x16',prov:'ECOPLASTICS',fe:100,cm:'4600000166',pos:110,centro:'4010',cap:60000,ss:8000},
+  {sap:'400117',desc:'PAPEL CERESINADO CASTAÑO 22X24 CM (empolvados-sept)',prov:'ECOPLASTICS',fe:100,cm:'4600000166',pos:150,centro:'4010',cap:60000,ss:1000},
+  {sap:'400645',desc:'PAPEL NATURAL PLIEGO 59,5X39,5',prov:'ECOPLASTICS',fe:500,cm:'4600000166',pos:130,centro:'4010',cap:30000,ss:1000},
+  {sap:'600256',desc:'GAS AGA PAC 2.7 70% N2- 30% CO2',prov:'GALLIUM',fe:90,cm:'4600000320',pos:10,centro:'4010',cap:270,ss:90},
   {sap:'600169',desc:'LIMPIADOR Y DESINFECTANTE AIRCOP',prov:'INFINITUM',fe:3,cm:'4600000144',pos:10,centro:'4010',cap:500,ss:180},
   {sap:'600008',desc:'BANDERILLA AMARILLO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:30,centro:'4010',cap:50000,ss:5000},
   {sap:'600094',desc:'BANDERILLA AZUL',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:120,centro:'4010',cap:50000,ss:5000},
@@ -496,13 +515,13 @@ const BBDD=[
   {sap:'600310',desc:'BANDERILLA BLANCA',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:190,centro:'4010',cap:30000,ss:5000},
   {sap:'600118',desc:'BANDERILLA CAFE',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:160,centro:'4010',cap:20000,ss:5000},
   {sap:'600119',desc:'BANDERILLA CELESTE',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:170,centro:'4010',cap:20000,ss:5000},
-  {sap:'600029',desc:'BANDERILLA FUCSIA F8',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:80,centro:'4010',cap:30000,ss:5000},
+  {sap:'600029',desc:'BANDERILLA FUCSIA  F8',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:80,centro:'4010',cap:30000,ss:5000},
   {sap:'600120',desc:'BANDERILLA GRIS',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:180,centro:'4010',cap:10000,ss:5000},
   {sap:'600111',desc:'BANDERILLA LILA',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:150,centro:'4010',cap:30000,ss:5000},
   {sap:'600007',desc:'BANDERILLA MORADO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:20,centro:'4010',cap:50000,ss:5000},
   {sap:'600095',desc:'BANDERILLA NARANJO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:130,centro:'4010',cap:30000,ss:5000},
   {sap:'600009',desc:'BANDERILLA NEGRO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:40,centro:'4010',cap:50000,ss:5000},
-  {sap:'600028',desc:'BANDERILLA ORO 1251',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:70,centro:'4010',cap:30000,ss:5000},
+  {sap:'600028',desc:'BANDERILLA ORO  1251',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:70,centro:'4010',cap:30000,ss:5000},
   {sap:'600071',desc:'BANDERILLA PERLA',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:100,centro:'4010',cap:10000,ss:5000},
   {sap:'600093',desc:'BANDERILLA ROJO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:110,centro:'4010',cap:50000,ss:5000},
   {sap:'600010',desc:'BANDERILLA ROSADO',prov:'LUIS ALFARO',fe:2500,cm:'4600000214',pos:50,centro:'4010',cap:30000,ss:5000},
@@ -513,15 +532,14 @@ const BBDD=[
   {sap:'600025',desc:'BALDE PASTILLA CARE CONTROL 100U',prov:'MARSOL',fe:1,cm:'4600000146',pos:20,centro:'4010',cap:1,ss:1},
   {sap:'600024',desc:'BALDE PASTILLAS DESENGRASANTES 1',prov:'MARSOL',fe:1,cm:'4600000146',pos:10,centro:'4010',cap:4,ss:1},
   {sap:'600148',desc:'VASO CONO DE PAPEL',prov:'RIADI',fe:5000,cm:'4600000208',pos:110,centro:'4010',cap:60000,ss:10000},
-  {sap:'600056',desc:'JABON ANTIBACTERIAL PRO-HIG 800',prov:'TRESSA',fe:10,cm:'4600000305',pos:40,centro:'4010',cap:60,ss:10},
+  {sap:'600056',desc:'JABON ANTIBACTERIAL PRO-HIG  800',prov:'TRESSA',fe:10,cm:'4600000305',pos:40,centro:'4010',cap:60,ss:10},
   {sap:'600140',desc:'ALCOHOL GEL LITRO',prov:'TRESSA',fe:6,cm:'4600000305',pos:140,centro:'4010',cap:144,ss:36},
   {sap:'600217',desc:'TRESSACIP ALKA',prov:'TRESSA',fe:26,cm:'4600000305',pos:60,centro:'4010',cap:208,ss:104},
-  // 4020 Huechuraba
   {sap:'600004',desc:'TOALLA PISAFOLD',prov:'TRESSA',fe:12,cm:'4600000305',pos:10,centro:'4020',cap:48,ss:5},
   {sap:'600005',desc:'GLIMAX / HERBAL FRESH',prov:'TRESSA',fe:12,cm:'4600000305',pos:20,centro:'4020',cap:48,ss:5},
-  {sap:'600056',desc:'JABON ANTIBACTERIAL PRO-HIG 8',prov:'TRESSA',fe:10,cm:'4600000305',pos:40,centro:'4020',cap:10,ss:5},
+  {sap:'600056',desc:'JABON ANTIBACTERIAL PRO-HIG  8',prov:'TRESSA',fe:10,cm:'4600000305',pos:40,centro:'4020',cap:10,ss:5},
   {sap:'600085',desc:'FILM PVC PALETIZAR 50 CM',prov:'ABC',fe:6,cm:'4600000086',pos:20,centro:'4020',cap:288,ss:100},
-  {sap:'600155',desc:'CINTA 110X450MT OUT C-NEGRA',prov:'ABITEK',fe:10,cm:'4600000217',pos:460,centro:'4020',cap:16,ss:5},
+  {sap:'600155',desc:'CINTA 110X450MT OUT C-NEGRA PERFORMANCE',prov:'ABITEK',fe:10,cm:'4600000217',pos:460,centro:'4020',cap:16,ss:5},
   {sap:'600133',desc:'CITRONIX',prov:'ABITEK',fe:1,cm:'4600000217',pos:420,centro:'4020',cap:16,ss:4},
   {sap:'600097',desc:'FILM PVC PALETIZAR ROJO',prov:'ABITEK',fe:6,cm:'4600000217',pos:410,centro:'4020',cap:30,ss:4},
   {sap:'600138',desc:'MAKEUPLT300-1004-001',prov:'ABITEK',fe:1,cm:'4600000217',pos:440,centro:'4020',cap:36,ss:3},
@@ -531,61 +549,55 @@ const BBDD=[
   {sap:'600016',desc:'TOALLA AUTOCORTE',prov:'BAÑADOS',fe:2,cm:'4600000142',pos:10,centro:'4020',cap:60,ss:10},
   {sap:'600001',desc:'BOLS.POLI PREPICADO 60*90',prov:'COPOL',fe:100,cm:'4600000197',pos:40,centro:'4020',cap:150,ss:30},
   {sap:'600161',desc:'BOLSA PREPICADO 60X90 NARANJA',prov:'COPOL',fe:100,cm:'4600000197',pos:80,centro:'4020',cap:150,ss:20},
-  {sap:'400284',desc:'ETIQ SATO MOTEX6600 LOTE/CONSUMIR',prov:'CRISME',fe:150,cm:'4600000188',pos:40,centro:'4020',cap:300,ss:20},
-  {sap:'400012',desc:'RODILLO ENTINTADOR 6600',prov:'CRISME',fe:100,cm:'4600000188',pos:10,centro:'4020',cap:120,ss:20},
+  {sap:'400284',desc:'ETIQ SATO MOTEX6600 LOTE/CONSUMIR_CRISME',prov:'CRISME',fe:150,cm:'4600000188',pos:40,centro:'4020',cap:300,ss:150},
+  {sap:'400012',desc:'RODILLO ENTINTADOR 6600',prov:'CRISME',fe:100,cm:'4600000188',pos:10,centro:'4020',cap:120,ss:100},
   {sap:'600041',desc:'BOLSA BASURA 100X130',prov:'DIMERC',fe:5,cm:'4600000164',pos:10,centro:'4020',cap:400,ss:50},
   {sap:'600002',desc:'CINTA ENGOMADA',prov:'ECON',fe:48,cm:'4600000160',pos:30,centro:'4020',cap:336,ss:96},
-  {sap:'300425',desc:'HARINA DE PAPA',prov:'EXTRUFOOD',fe:600,cm:'4600000068',pos:30,centro:'4020',cap:1200,ss:200},
   {sap:'600169',desc:'LIMPIADOR Y DESINFECTANTE AIRCOP',prov:'INFINITUM',fe:3,cm:'4600000144',pos:10,centro:'4020',cap:140,ss:50},
-  {sap:'600027',desc:'MANGA POLIESTER RAYON BLANCA',prov:'JAZAR',fe:100,cm:'4600000154',pos:20,centro:'4020',cap:150,ss:30},
+  {sap:'600027',desc:'MANGA POLIESTER RAYON B LANCA',prov:'JAZAR',fe:100,cm:'4600000154',pos:20,centro:'4020',cap:150,ss:30},
   {sap:'600026',desc:'PECHERA LONA',prov:'JAZAR',fe:100,cm:'4600000154',pos:10,centro:'4020',cap:150,ss:30},
   {sap:'600037',desc:'BOTELLA PLASTICA 1LT',prov:'KLEEN',fe:100,cm:'4600000145',pos:120,centro:'4020',cap:20,ss:2},
   {sap:'600036',desc:'GATILLO PISTOLA BLANCO',prov:'KLEEN',fe:100,cm:'4600000145',pos:110,centro:'4020',cap:20,ss:2},
-  {sap:'300202',desc:'ACIDO SORBICO',prov:'MATHIESEN',fe:600,cm:'4600000127',pos:10,centro:'4020',cap:900,ss:200},
-  {sap:'300080',desc:'SEMILLA SESAMO',prov:'NAMA',fe:600,cm:'4600000047',pos:10,centro:'4020',cap:1800,ss:600},
-  {sap:'300061',desc:'MANTECA INDUSTRIAL',prov:'PACIFICO SUR',fe:600,cm:'4600000131',pos:20,centro:'4020',cap:1000,ss:200},
-  {sap:'300293',desc:'ACIDO CITRICO ENCAPSULADO',prov:'PROQUEM',fe:600,cm:'4600000134',pos:10,centro:'4020',cap:600,ss:600},
-  {sap:'300056',desc:'FIBRA DE TRIGO PANES',prov:'QUIMATIC',fe:200,cm:'4600000119',pos:40,centro:'4020',cap:400,ss:200},
   {sap:'600014',desc:'GORRO DESECHABLE',prov:'REUTTER',fe:100,cm:'4600000183',pos:30,centro:'4020',cap:10000,ss:1000},
   {sap:'600049',desc:'GUANTE NITRILO CELESTE L',prov:'REUTTER',fe:100,cm:'4600000183',pos:70,centro:'4020',cap:12000,ss:1000},
   {sap:'600048',desc:'GUANTE NITRILO CELESTE M',prov:'REUTTER',fe:100,cm:'4600000183',pos:60,centro:'4020',cap:12000,ss:1000},
   {sap:'600022',desc:'GUANTE NITRILO CELESTE S',prov:'REUTTER',fe:100,cm:'4600000183',pos:50,centro:'4020',cap:12000,ss:1000},
   {sap:'600003',desc:'MASCARA FACIAL',prov:'REUTTER',fe:100,cm:'4600000183',pos:10,centro:'4020',cap:10000,ss:1000},
   {sap:'600148',desc:'VASO CONO DE PAPEL',prov:'RIADI',fe:5000,cm:'4600000208',pos:110,centro:'4020',cap:20000,ss:3000},
-  {sap:'300142',desc:'MARGARINA SIN TRANS',prov:'TEAM FOODS CHILE SA',fe:600,cm:'4600000034',pos:10,centro:'4020',cap:1000,ss:200},
   {sap:'600135',desc:'GUANTE HILO 7 H',prov:'TRECK',fe:100,cm:'4600000148',pos:250,centro:'4020',cap:1200,ss:500},
   {sap:'600140',desc:'ALCOHOL GEL LITRO',prov:'TRESSA',fe:6,cm:'4600000305',pos:140,centro:'4020',cap:24,ss:6},
-  {sap:'600143',desc:'CLOROX BIDON 5LT',prov:'TRESSA',fe:18,cm:'4600000305',pos:50,centro:'4020',cap:54,ss:18},
+  {sap:'600143',desc:'CLOROX BIDON 5LT',prov:'TRESSA',fe:18,cm:'4600000305',pos:50,centro:'4020',cap:54,ss:18}
 ];
 const CD_BBDD=[
-  {sap:'600085',desc:'FILM PVC PALETIZAR 50 CM',    prov:'ABC',       fe:240,cm:'4600000086',pos:20, cap:2400,ss:2400,palets:10,upalet:240, leadtime:'24 hrs',       wf:1.5},
-  {sap:'600019',desc:'PAPEL HIGIENICO 4x500 MT',    prov:'BAÑADOS',   fe:4,  cm:'4600000142',pos:20, cap:1200,ss:480, palets:2, upalet:240, leadtime:'24 hrs',       wf:1.5},
-  {sap:'600016',desc:'TOALLA AUTOCORTE',            prov:'BAÑADOS',   fe:2,  cm:'4600000142',pos:10, cap:900, ss:360, palets:2, upalet:180, leadtime:'24 hrs',       wf:1.5},
-  {sap:'400046',desc:'CTN CAJA PAN MIGA',           prov:'CHILEMPACK',fe:300,cm:'4600000155',pos:30, cap:1800,ss:600, palets:2, upalet:300, leadtime:'3 semanas ⚠', wf:3},
-  {sap:'600135',desc:'GUANTE HILO 7 H',             prov:'TRECK',     fe:200,cm:'4600000148',pos:250,cap:2000,ss:2000,palets:1, upalet:2000,leadtime:'24 hrs',       wf:1.5},
+  {sap:'600085',desc:'FILM PVC PALETIZAR 50 CM',prov:'ABC',fe:240,cm:'4600000086',pos:20,cap:2400,ss:2400,palets:10,upalet:240,leadtime:'24 hrs',wf:1.5},
+  {sap:'600019',desc:'PAPEL HIGIENICO 4x500 MT',prov:'BAÑADOS',fe:4,cm:'4600000142',pos:20,cap:1200,ss:480,palets:2,upalet:240,leadtime:'24 hrs',wf:1.5},
+  {sap:'600016',desc:'TOALLA AUTOCORTE',prov:'BAÑADOS',fe:2,cm:'4600000142',pos:10,cap:900,ss:360,palets:2,upalet:180,leadtime:'24 hrs',wf:1.5},
+  {sap:'400046',desc:'CTN CAJA PAN MIGA',prov:'CHILEMPACK',fe:300,cm:'4600000155',pos:30,cap:1800,ss:900,palets:2,upalet:300,leadtime:'3 semanas ⚠',wf:3},
+  {sap:'600135',desc:'GUANTE HILO 7 H',prov:'TRECK',fe:200,cm:'4600000148',pos:250,cap:2000,ss:2000,palets:1,upalet:2000,leadtime:'24 hrs',wf:1.5}
 ];
 const STOCK_BASE={
-  "4010|ZPT":66679.8,
-  "4120|ZPT":1377519,
-  "4020|ZPT":0,
-  "4010|ZSEM":51593,
-  "4020|ZSEM":29829.83,
-  "4010|ZMPR":628234.12,
-  "4120|ZMPR":560296.24,
-  "4020|ZMPR":10156.31,
-  "4120|ZEMP":4633252.8,
-  "4010|ZEMP":12427347.48,
-  "4020|ZEMP":217429.25,
-  "4120|ZIME":12806555.3,
-  "4010|ZIME":3514,
-  "4010|ZINS":2430922.05,
-  "4020|ZINS":72851.7,
-  "4120|ZINS":103797,
-  "4010|ZVES":6280,
-  "4120|ZVES":11883,
-  "4020|ZVES":1,
-  "4020|ZREP":19818.8,
-  "4010|ZREP":24248.1
+  "4010|400003":0,"4010|400012":0,"4010|400013":0,
+  "4010|400027":0,"4010|400032":0,"4010|400046":0,"4010|400051":0,
+  "4010|400117":0,"4010|400284":0,"4010|400645":0,
+  "4010|600006":0,"4010|600007":0,"4010|600008":0,"4010|600009":0,
+  "4010|600010":0,"4010|600012":0,"4010|600016":0,"4010|600019":0,
+  "4010|600024":0,"4010|600025":0,"4010|600028":0,"4010|600029":0,
+  "4010|600056":0,"4010|600070":0,"4010|600071":0,"4010|600093":0,
+  "4010|600094":0,"4010|600095":0,"4010|600110":0,"4010|600111":0,
+  "4010|600118":0,"4010|600119":0,"4010|600120":0,"4010|600122":0,
+  "4010|600140":0,"4010|600148":0,"4010|600169":0,"4010|600217":0,
+  "4010|600256":0,"4010|600310":0,
+  "4020|400012":0,
+  "4020|400284":0,"4020|600001":0,"4020|600002":0,"4020|600003":0,
+  "4020|600004":0,"4020|600005":0,"4020|600014":0,"4020|600016":0,
+  "4020|600019":0,"4020|600022":0,"4020|600026":0,"4020|600027":0,
+  "4020|600036":0,"4020|600037":0,"4020|600041":0,"4020|600048":0,
+  "4020|600049":0,"4020|600053":0,"4020|600056":0,"4020|600066":0,
+  "4020|600085":0,"4020|600097":0,"4020|600133":0,"4020|600135":0,
+  "4020|600138":0,"4020|600140":0,"4020|600143":0,"4020|600148":0,
+  "4020|600155":0,"4020|600161":0,"4020|600169":0,
+  "4120|600085":0,"4120|600019":0,"4120|600016":0,
+  "4120|400046":0,"4120|600135":0,
 };
 
 // ── LÓGICA ──────────────────────────────────────────────────────────────────
@@ -631,7 +643,7 @@ function build(sm){
     return{...item,stockVal,compra,est,enArchivo};
   });
   document.getElementById('kt').textContent=tData.length;
-  document.getElementById('kb').textContent=tData.filter(r=>r.compra>0).length;
+  document.getElementById('kb').textContent=tData.filter(r=>r.est==='comprar').length;
   document.getElementById('kl').textContent=tData.filter(r=>r.est==='bajo').length;
   document.getElementById('ko').textContent=tData.filter(r=>r.est==='ok').length;
   const provs=[...new Set(tData.map(r=>r.prov))].sort();
@@ -640,6 +652,7 @@ function build(sm){
   provs.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;fp.appendChild(o);});
   render();
   buildCD(sm);
+  setTimeout(initNotaBadges,100);
 }
 
 // ── RENDER TABLA ─────────────────────────────────────────────────────────────
@@ -685,64 +698,209 @@ function render(){
 function openDrawer(sap,centro){
   const r=tData.find(x=>x.sap===sap&&x.centro===centro);
   if(!r)return;
+
+  // ── Header del drawer ────────────────────────────────────────
   document.getElementById('d-sap').textContent=`SAP ${r.sap} · ${r.centro==='4010'?'Quilicura':'Huechuraba'}`;
   document.getElementById('d-desc').textContent=r.desc;
   const est=r.est==='bajo'?'Bajo S.S.':r.est==='comprar'?'Comprar':'Stock Check 👍';
   const ecls=r.est==='bajo'?'de-r':r.est==='comprar'?'de-y':'de-g';
   document.getElementById('d-estado-pill').innerHTML=`<span class="d-estado ${ecls}">${est}</span>`;
+
   const pct=r.cap>0?Math.min(100,Math.max(0,r.stockVal/r.cap*100)):0;
   const barCol=pct<15?'#dc2626':pct<50?'#d97706':'#16a34a';
-  const compraHtml=r.compra>0
-    ?`<div class="compra-num">${fmt(r.compra)}</div>
-      <div class="compra-fe">Múltiplo de empaque: <b>${fmt(r.fe)}</b> unidades · ${Math.round(r.compra/r.fe)} empaque${Math.round(r.compra/r.fe)!==1?'s':''}</div>`
-    :`<div class="compra-ok">✓</div><div class="compra-fe" style="color:var(--grn);margin-top:4px">Sin requerimiento de compra</div>`;
-  document.getElementById('drawer-body').innerHTML=`
-    <div class="d-section">
-      <div class="d-section-title">📦 Stock actual</div>
-      <div class="d-grid">
-        <div class="d-item d-full">
-          <div class="d-lbl">Unidades en stock</div>
-          <div class="d-val">${r.enArchivo?fmt(r.stockVal):'⚠ Sin dato'}</div>
-          <div class="d-bar-wrap">
-            <div class="d-bar-bg"><div class="d-bar-f" style="width:${pct.toFixed(1)}%;background:${barCol}"></div></div>
-            <div class="d-pct">${pct.toFixed(0)}% de capacidad</div>
-          </div>
-        </div>
-        <div class="d-item">
-          <div class="d-lbl">Stock Seguridad</div>
-          <div class="d-val">${fmt(r.ss)}</div>
-          <div style="font-size:10px;color:var(--mut);margin-top:2px">~1 semana cobertura</div>
-        </div>
-        <div class="d-item">
-          <div class="d-lbl">Cap. Almacenamiento</div>
-          <div class="d-val">${fmt(r.cap)}</div>
-        </div>
+
+  // ── Datos de consumo ─────────────────────────────────────────
+  const cData  = CONSUMOS[`${r.sap}|${r.centro}`];
+  const otroC  = r.centro==='4010'?'4020':'4010';
+  const otroData = CONSUMOS[`${r.sap}|${otroC}`];
+  const otroLabel= r.centro==='4010'?'4020 · HUE':'4010 · QUI';
+
+  // ── Lote basado en consumo (prom × 1.2, redondeado al FE) ───
+  function calcLote(d){
+    if(!d||d.prom<=0) return 0;
+    return Math.ceil(d.prom*1.2/r.fe)*r.fe;
+  }
+  const lote = calcLote(cData) || 0;
+
+  // ── Compra sugerida (lote de consumo, no de capacidad) ───────
+  let cmpHtml, cmpHint;
+  if(lote>0){
+    const enoughs = r.stockVal >= r.ss + lote;
+    cmpHtml = enoughs
+      ? `<div class="compra-ok">✓</div><div class="compra-fe" style="color:var(--grn);margin-top:4px">Sin requerimiento ahora</div>`
+      : `<div class="compra-num">${fmt(lote)}</div>
+         <div class="compra-fe">~1 mes consumo +20% · ${Math.round(lote/r.fe)} empaque${Math.round(lote/r.fe)!==1?'s':''} × ${fmt(r.fe)} ${r.um_label||'un'}</div>`;
+    const umL = r.um_label||'un'; cmpHint = `Factor empaque: <b style="color:var(--txt2)">${fmt(r.fe)} ${umL}</b> · Lote calibrado al consumo, no a la capacidad máxima`;
+  } else {
+    cmpHtml = r.compra>0
+      ? `<div class="compra-num">${fmt(r.compra)}</div><div class="compra-fe">${Math.round(r.compra/r.fe)} empaque${Math.round(r.compra/r.fe)!==1?'s':''} × ${fmt(r.fe)} un</div>`
+      : `<div class="compra-ok">✓</div><div class="compra-fe" style="color:var(--grn);margin-top:4px">Sin requerimiento de compra</div>`;
+    cmpHint = `Factor empaque: <b style="color:var(--txt2)">${fmt(r.fe)} un</b> · Sin consumo registrado`;
+  }
+
+  // ── HTML del body con tabs ────────────────────────────────────
+  document.getElementById('drawer-body').innerHTML = [
+    '<div class="drawer-tabs">',
+    '  <button class="dtab on" onclick="switchDTab(\'info\',this)">📋 Info</button>',
+    '  <button class="dtab" onclick="switchDTab(\'consumo\',this)">📊 Consumo</button>',
+    '  <button class="dtab" onclick="switchDTab(\'recepcion\',this)">📆 Recepción</button>',
+    '  <button class="dtab" onclick="switchDTab(\'notas\',this)">📝 Notas</button>',
+    '</div>',
+    '<div class="dpane on" id="dpane-info">',
+    '  <div class="d-section">',
+    '    <div class="d-section-title">📦 Stock actual</div>',
+    '    <div class="d-grid">',
+    '      <div class="d-item d-full">',
+    `        <div class="d-lbl">Unidades en stock</div>`,
+    `        <div class="d-val">${r.enArchivo?fmt(r.stockVal):'⚠ Sin dato'}</div>`,
+    '        <div class="d-bar-wrap">',
+    `          <div class="d-bar-bg"><div class="d-bar-f" style="width:${pct.toFixed(1)}%;background:${barCol}"></div></div>`,
+    `          <div class="d-pct">${pct.toFixed(0)}% de capacidad (${fmt(r.cap)} un)</div>`,
+    '        </div>',
+    '      </div>',
+    '      <div class="d-item">',
+    '        <div class="d-lbl">Stock Seguridad</div>',
+    `        <div class="d-val">${fmt(r.ss)}</div>`,
+    '        <div style="font-size:10px;color:var(--mut);margin-top:2px">~1 semana cobertura</div>',
+    '      </div>',
+    '      <div class="d-item">',
+    '        <div class="d-lbl">Cap. Almacenamiento</div>',
+    `        <div class="d-val">${fmt(r.cap)}</div>`,
+    '      </div>',
+    '    </div>',
+    '  </div>',
+    '  <div class="d-section">',
+    '    <div class="d-section-title">🏭 Proveedor & Contrato</div>',
+    '    <div class="d-grid">',
+    `      <div class="d-item d-full"><div class="d-lbl">Proveedor</div><div class="d-val-sm">${r.prov}</div></div>`,
+    '    </div>',
+    '    <div style="margin-top:10px">',
+    '      <div style="font-size:10px;color:var(--mut);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">CM / POS — Clic para copiar en SAP</div>',
+    `      <div class="cm-box" onclick="copiarCMDrawer('${r.cm}','${r.pos}',this)">`,
+    `        <div class="cm-box-text">${r.cm}<span class="cm-box-pos">/ ${r.pos}</span></div>`,
+    '        <button class="cm-copy-btn">📋 Copiar</button>',
+    '      </div>',
+    '    </div>',
+    '  </div>',
+    '  <div class="d-section">',
+    '    <div class="d-section-title">🛒 Lote de compra</div>',
+    `    <div class="compra-box">${cmpHtml}</div>`,
+    `    <div style="margin-top:8px;font-size:11px;color:var(--mut)">${cmpHint}</div>`,
+    '  </div>',
+    '</div>',
+    '<div class="dpane" id="dpane-consumo">',
+    '  <div id="dpane-consumo-inner" style="padding-top:4px"></div>',
+    '</div>',
+    '<div class="dpane" id="dpane-recepcion">',
+    '  <div id="dpane-recepcion-inner" style="padding-top:4px"></div>',
+    '</div>',
+    '<div class="dpane" id="dpane-notas">',
+    '  <div style="margin-bottom:10px;font-size:12px;color:var(--mut);line-height:1.6">',
+    '    Escribe observaciones para este material. Se guardan en este dispositivo.',
+    '  </div>',
+    `  <textarea class="nota-ta" id="nota-ta" placeholder="Ej: quiebre de proveedor, reemplazando por código XXX hasta reposición…" oninput="autoResizeTA(this);guardarNota('${r.sap}','${r.centro}',this.value)"></textarea>`,
+    '  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">',
+    '    <span style="font-size:10px;color:var(--mut)">💾 Se guarda automáticamente</span>',
+    '    <span class="nota-saved" id="nota-saved">✓ Guardado</span>',
+    '  </div>',
+    '</div>',
+  ].join('\n');
+
+  // ── Poblar pane consumo ──────────────────────────────────────
+  const renderCentro = (label, col, data) => {
+    if(!data) return '';
+    const hasVal = data.prom>0||data.mayo>0||data.junio>0||data.julio>0;
+    if(!hasVal) return `<div class="d-item"><div class="d-lbl">${label}</div><div class="d-val-sm" style="color:var(--mut)">Sin consumo</div></div>`;
+    return `<div class="d-item">
+      <div class="d-lbl">${label}</div>
+      <div class="d-val" style="color:${col}">${data.prom.toLocaleString('es-CL')}</div>
+      <div style="font-size:10px;color:var(--mut);margin-top:2px">${data.um}/mes (prom)</div>
+      <div style="font-size:10px;color:var(--mut);margin-top:4px;line-height:1.8">
+        May: <b>${data.mayo.toLocaleString('es-CL')}</b> ·
+        Jun: <b>${data.junio.toLocaleString('es-CL')}</b> ·
+        Jul: <b>${data.julio.toLocaleString('es-CL')}</b>
+      </div>
+    </div>`;
+  };
+
+  let consumoHtml = (!cData && !otroData)
+    ? '<div style="color:var(--mut);font-size:12px;padding:8px 0">Sin registro de consumo en el período</div>'
+    : `<div class="d-grid">
+        ${renderCentro(r.centro==='4010'?'4010 · QUI':'4020 · HUE','var(--pink)',cData)}
+        ${otroData?renderCentro(otroLabel,'var(--mut)',otroData):''}
+       </div>
+       <div style="font-size:10px;color:var(--mut);margin-top:10px">⚠ Promedio excluye agosto (parcial hasta 18-ago)</div>`;
+
+  document.getElementById('dpane-consumo-inner').innerHTML = consumoHtml;
+
+  // ── Poblar pane recepción ────────────────────────────────────
+  let recHtml = '';
+  if(cData && cData.prom > 0 && lote > 0){
+    const diario    = cData.prom / 30;
+    const cobertura = Math.round(r.stockVal / diario);
+    const diasSS    = Math.round(r.ss / diario);
+    const diasLote  = Math.round(lote / diario);
+    const frecMes   = Math.max(1, Math.ceil(cData.prom / lote));
+    const meses     = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const fmtF      = dt => `${dt.getDate()} ${meses[dt.getMonth()]}`;
+    const urgente   = r.stockVal < r.ss;
+    const cobColor  = cobertura<=diasSS?'var(--red)':cobertura<=diasSS*2?'var(--yel)':'var(--grn)';
+
+    // Primera recepción: cuando llegue al SS
+    const hoy = new Date();
+    const diasAlerta = Math.max(0, cobertura - diasSS);
+    const prox = new Date(hoy); prox.setDate(hoy.getDate() + diasAlerta);
+    const fechas = [];
+    let f = new Date(prox);
+    for(let i=0; i<Math.min(frecMes+2, 5); i++){
+      fechas.push(new Date(f));
+      f = new Date(f); f.setDate(f.getDate() + diasLote);
+    }
+
+    recHtml = `
+    ${urgente?'<div style="background:var(--red-0);border:1px solid var(--red);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:700">⚠ Stock bajo SS — recepción URGENTE</div>':''}
+    <div class="rec-row">
+      <div class="rec-cell" style="border-right:1px solid var(--brd)">
+        <div class="rec-lbl">Cobertura actual</div>
+        <div class="rec-val" style="color:${cobColor}">${cobertura}</div>
+        <div class="rec-sub">días</div>
+      </div>
+      <div class="rec-cell" style="border-right:1px solid var(--brd)">
+        <div class="rec-lbl">Recepciones/mes</div>
+        <div class="rec-val" style="color:var(--pink)">${frecMes}×</div>
+        <div class="rec-sub">c/${diasLote} días</div>
+      </div>
+      <div class="rec-cell">
+        <div class="rec-lbl">Lote/recepción</div>
+        <div class="rec-val" style="color:var(--txt)">${fmt(lote)}</div>
+        <div class="rec-sub">${cData.um}</div>
       </div>
     </div>
-    <div class="d-section">
-      <div class="d-section-title">🏭 Proveedor & Contrato</div>
-      <div class="d-grid">
-        <div class="d-item d-full">
-          <div class="d-lbl">Proveedor</div>
-          <div class="d-val-sm">${r.prov}</div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:8px">📅 Próximas recepciones</div>
+    ${fechas.map((ff,i)=>`
+      <div class="rec-item ${i===0?'prox':'sig'}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:var(--mut);font-family:var(--mn)">#${i+1}</span>
+          <span style="font-size:13px;font-weight:${i===0?'800':'600'};color:${i===0?'var(--pink-d)':'var(--txt)'}">${fmtF(ff)}</span>
         </div>
-      </div>
-      <div style="margin-top:10px">
-        <div style="font-size:10px;color:var(--mut);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.6px">CM / POS — Clic para copiar en SAP</div>
-        <div class="cm-box" onclick="copiarCMDrawer('${r.cm}','${r.pos}',this)">
-          <div class="cm-box-text">${r.cm}<span class="cm-box-pos">/ ${r.pos}</span></div>
-          <button class="cm-copy-btn">📋 Copiar</button>
-        </div>
-      </div>
-    </div>
-    <div class="d-section">
-      <div class="d-section-title">🛒 Compra sugerida</div>
-      <div class="compra-box">${compraHtml}</div>
-      <div style="margin-top:8px;font-size:11px;color:var(--mut)">
-        Factor de empaque: <b style="color:var(--txt2)">${fmt(r.fe)} un</b> · La compra se modula en múltiplos de este valor para optimizar el pedido
-      </div>
-    </div>
-  `;
+        <span style="font-family:var(--mn);font-size:12px;font-weight:700;color:var(--txt2)">${fmt(lote)} ${cData.um}</span>
+      </div>`).join('')}
+    <div style="font-size:10px;color:var(--mut);margin-top:10px;line-height:1.5">
+      Consumo diario: ~${Math.round(diario*10)/10} ${cData.um} · SS cubre ${diasSS} días de colchón
+    </div>`;
+  } else {
+    recHtml = '<div style="color:var(--mut);font-size:12px;padding:8px 0">Sin consumo registrado — no es posible calcular frecuencia</div>';
+  }
+  document.getElementById('dpane-recepcion-inner').innerHTML = recHtml;
+
+  // ── Notas ────────────────────────────────────────────────────
+  const notaKey = `nota_${r.sap}_${r.centro}`;
+  const notaVal = (() => { try{ return localStorage.getItem(notaKey)||''; }catch(e){ return ''; }})();
+  setTimeout(()=>{
+    const ta = document.getElementById('nota-ta');
+    if(ta){ ta.value = notaVal; autoResizeTA(ta); }
+  }, 30);
+
   document.getElementById('drawer-overlay').classList.add('on');
   document.getElementById('drawer').classList.add('on');
 }
@@ -913,21 +1071,189 @@ function exportXLSX(){
   XLSX.writeFile(wb,`MOB_PLANNER_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
+const CONSUMOS={
+  "600004|4020":{"mayo":19.0,"junio":13.0,"julio":19.0,"prom":17.0,"um":"UND"},
+  "600005|4020":{"mayo":20.0,"junio":15.0,"julio":20.0,"prom":18.3,"um":"LTR"},
+  "600056|4020":{"mayo":31.0,"junio":19.0,"julio":22.0,"prom":24.0,"um":"UND"},
+  "600085|4020":{"mayo":492.0,"junio":402.0,"julio":492.0,"prom":462.0,"um":"ROL"},
+  "600155|4020":{"mayo":6.0,"junio":2.0,"julio":3.0,"prom":3.7,"um":"UND"},
+  "600133|4020":{"mayo":9.0,"junio":5.0,"julio":4.0,"prom":6.0,"um":"UND"},
+  "600097|4020":{"mayo":8.0,"junio":3.0,"julio":4.0,"prom":5.0,"um":"UND"},
+  "600138|4020":{"mayo":35.0,"junio":28.0,"julio":35.0,"prom":32.7,"um":"UND"},
+  "600053|4020":{"mayo":3.0,"junio":5.0,"julio":2.0,"prom":3.3,"um":"UND"},
+  "600066|4020":{"mayo":6.0,"junio":0.0,"julio":0.0,"prom":2.0,"um":"UND"},
+  "600019|4020":{"mayo":252.0,"junio":186.0,"julio":222.0,"prom":220.0,"um":"UND"},
+  "600016|4020":{"mayo":52.0,"junio":48.0,"julio":47.0,"prom":49.0,"um":"UND"},
+  "600001|4020":{"mayo":70.7,"junio":66.3,"julio":80.0,"prom":72.3,"um":"KG"},
+  "600161|4020":{"mayo":50.0,"junio":40.0,"julio":57.0,"prom":49.0,"um":"KG"},
+  "400284|4020":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"UND"},
+  "400012|4020":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "600041|4020":{"mayo":80.0,"junio":30.0,"julio":90.0,"prom":66.7,"um":"UND"},
+  "600002|4020":{"mayo":11.0,"junio":111.0,"julio":319.0,"prom":147.0,"um":"UND"},
+  "600169|4020":{"mayo":80.0,"junio":95.0,"julio":130.0,"prom":101.7,"um":"LTR"},
+  "600027|4020":{"mayo":6.0,"junio":5.0,"julio":9.0,"prom":6.7,"um":"UND"},
+  "600026|4020":{"mayo":26.0,"junio":24.0,"julio":14.0,"prom":21.3,"um":"UND"},
+  "600037|4020":{"mayo":6.0,"junio":6.0,"julio":3.0,"prom":5.0,"um":"UND"},
+  "600036|4020":{"mayo":5.0,"junio":5.0,"julio":4.0,"prom":4.7,"um":"UND"},
+  "600014|4020":{"mayo":8000.0,"junio":4000.0,"julio":6000.0,"prom":6000.0,"um":"UND"},
+  "600049|4020":{"mayo":8700.0,"junio":6500.0,"julio":8100.0,"prom":7766.7,"um":"UND"},
+  "600048|4020":{"mayo":7400.0,"junio":6000.0,"julio":6300.0,"prom":6566.7,"um":"UND"},
+  "600022|4020":{"mayo":1400.0,"junio":1600.0,"julio":1300.0,"prom":1433.3,"um":"UND"},
+  "600003|4020":{"mayo":14000.0,"junio":9000.0,"julio":16000.0,"prom":13000.0,"um":"UND"},
+  "600148|4020":{"mayo":10200.0,"junio":9400.0,"julio":9400.0,"prom":9666.7,"um":"UND"},
+  "600135|4020":{"mayo":1170.0,"junio":580.0,"julio":1495.0,"prom":1081.7,"um":"UND"},
+  "600140|4020":{"mayo":13.0,"junio":7.0,"julio":5.0,"prom":8.3,"um":"LTR"},
+  "600143|4020":{"mayo":3.0,"junio":4.0,"julio":3.0,"prom":3.3,"um":"UND"},
+  "600019|4010":{"mayo":876.0,"junio":1008.0,"julio":960.0,"prom":948.0,"um":"UND"},
+  "600016|4010":{"mayo":557.0,"junio":632.0,"julio":512.0,"prom":567.0,"um":"UND"},
+  "400046|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400051|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400002|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400284|4010":{"mayo":939.406,"junio":991.428,"julio":735.924,"prom":888.9,"um":"UND"},
+  "400012|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400003|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400013|4010":{"mayo":280.728,"junio":326.295,"julio":282.478,"prom":296.5,"um":"UND"},
+  "400032|4010":{"mayo":26610.0,"junio":27963.0,"julio":21753.0,"prom":25442.0,"um":"UND"},
+  "400117|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "400645|4010":{"mayo":1622.291,"junio":1907.864,"julio":1292.862,"prom":1607.7,"um":"UND"},
+  "600256|4010":{"mayo":270.0,"junio":270.0,"julio":450.0,"prom":330.0,"um":"UND"},
+  "600169|4010":{"mayo":165.0,"junio":465.0,"julio":1365.0,"prom":665.0,"um":"LTR"},
+  "600008|4010":{"mayo":10000.0,"junio":0.0,"julio":22500.0,"prom":10833.3,"um":"UND"},
+  "600094|4010":{"mayo":10000.0,"junio":0.0,"julio":7500.0,"prom":5833.3,"um":"UND"},
+  "600070|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "600310|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "600118|4010":{"mayo":15000.0,"junio":0.0,"julio":0.0,"prom":5000.0,"um":"UND"},
+  "600119|4010":{"mayo":5000.0,"junio":0.0,"julio":5000.0,"prom":3333.3,"um":"UND"},
+  "600029|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "600120|4010":{"mayo":2500.0,"junio":0.0,"julio":0.0,"prom":833.3,"um":"UND"},
+  "600111|4010":{"mayo":7500.0,"junio":0.0,"julio":0.0,"prom":2500.0,"um":"UND"},
+  "600007|4010":{"mayo":7500.0,"junio":0.0,"julio":5000.0,"prom":4166.7,"um":"UND"},
+  "600095|4010":{"mayo":2500.0,"junio":0.0,"julio":15000.0,"prom":5833.3,"um":"UND"},
+  "600009|4010":{"mayo":0.0,"junio":0.0,"julio":12500.0,"prom":4166.7,"um":"UND"},
+  "600028|4010":{"mayo":0.0,"junio":0.0,"julio":10000.0,"prom":3333.3,"um":"UND"},
+  "600071|4010":{"mayo":0.0,"junio":0.0,"julio":10000.0,"prom":3333.3,"um":"UND"},
+  "600093|4010":{"mayo":12500.0,"junio":0.0,"julio":15000.0,"prom":9166.7,"um":"UND"},
+  "600010|4010":{"mayo":5000.0,"junio":0.0,"julio":7500.0,"prom":4166.7,"um":"UND"},
+  "600006|4010":{"mayo":7500.0,"junio":0.0,"julio":10000.0,"prom":5833.3,"um":"UND"},
+  "600012|4010":{"mayo":2500.0,"junio":0.0,"julio":5000.0,"prom":2500.0,"um":"UND"},
+  "600110|4010":{"mayo":2500.0,"junio":0.0,"julio":0.0,"prom":833.3,"um":"UND"},
+  "600122|4010":{"mayo":0.0,"junio":0.0,"julio":0.0,"prom":0.0,"um":"(sin consumo)"},
+  "600025|4010":{"mayo":0.0,"junio":1.0,"julio":0.0,"prom":0.3,"um":"UND"},
+  "600024|4010":{"mayo":3.0,"junio":2.0,"julio":5.0,"prom":3.3,"um":"UND"},
+  "600148|4010":{"mayo":20000.0,"junio":35000.0,"julio":35000.0,"prom":30000.0,"um":"UND"},
+  "600056|4010":{"mayo":152.0,"junio":166.0,"julio":176.0,"prom":164.7,"um":"UND"},
+  "600140|4010":{"mayo":26.0,"junio":29.0,"julio":27.0,"prom":27.3,"um":"LTR"},
+  "600217|4010":{"mayo":520.0,"junio":572.0,"julio":247.0,"prom":446.3,"um":"KG"}
+};
 
-// ── TOGGLE VISTA ─────────────────────────────────────────────────────────────
-const VIEWS = ['auto','mobile-view','desktop-view'];
-const ICONS = ['📱⇄🖥️','📱','🖥️'];
-const LABELS = ['Auto','Móvil','Escritorio'];
-let viewIdx = 0;
-function toggleView(){
-  // Quitar clase anterior
-  document.body.classList.remove('mobile-view','desktop-view');
-  viewIdx = (viewIdx + 1) % 3;
-  if(viewIdx > 0) document.body.classList.add(VIEWS[viewIdx]);
-  const btn = document.getElementById('btn-view');
-  btn.textContent = ICONS[viewIdx];
-  btn.title = `Vista: ${LABELS[viewIdx]}`;
+// ── FECHA Y HORA DINÁMICA ────────────────────────────────────────
+function actualizarFecha(){
+  const now = new Date();
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const dia   = String(now.getDate()).padStart(2,'0');
+  const mes   = meses[now.getMonth()];
+  const anio  = now.getFullYear();
+  const hh    = String(now.getHours()).padStart(2,'0');
+  const mm    = String(now.getMinutes()).padStart(2,'0');
+  const el    = document.getElementById('dtag');
+  if(el) el.textContent = `📅 ${dia} ${mes} ${anio} · ${hh}:${mm}`;
 }
+actualizarFecha();
+setInterval(actualizarFecha, 60000); // actualiza cada minuto
+
+
+
+// ── POPUP DE NOTA ─────────────────────────────────────────────────
+let popupEl = null;
+function mostrarPopupNota(event, sap, centro){
+  event.stopPropagation();
+  try{
+    const key = `nota_${sap}_${centro}`;
+    const val = localStorage.getItem(key)||'';
+    if(!val.trim()){ return; }
+
+    // Cerrar popup previo
+    if(popupEl){ popupEl.remove(); popupEl=null; }
+
+    popupEl = document.createElement('div');
+    popupEl.className = 'nota-popup';
+    popupEl.innerHTML = `<div class="nota-popup-title">📝 Nota · SAP ${sap}</div>${val.replace(/\n/g,'<br>')}`;
+    document.body.appendChild(popupEl);
+
+    // Posicionar cerca del clic
+    const x = Math.min(event.clientX + 10, window.innerWidth - 300);
+    const y = event.clientY + 14;
+    popupEl.style.left = x + 'px';
+    popupEl.style.top  = y + 'px';
+
+    // Cerrar al clic fuera
+    setTimeout(()=>{
+      document.addEventListener('click', ()=>{ if(popupEl){popupEl.remove();popupEl=null;}}, {once:true});
+    },10);
+  }catch(e){}
+}
+
+// ── DRAWER TABS ────────────────────────────────────────────────────
+function switchDTab(id, btn){
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.dpane').forEach(p=>p.classList.remove('on'));
+  const el = document.getElementById('dpane-'+id);
+  if(el) el.classList.add('on');
+}
+// ── NOTAS ─────────────────────────────────────────────────────────
+function guardarNota(sap, centro, val){
+  try{
+    const key = `nota_${sap}_${centro}`;
+    if(val.trim()) localStorage.setItem(key, val);
+    else localStorage.removeItem(key);
+  }catch(e){}
+  const s = document.getElementById('nota-saved');
+  if(s){ s.classList.add('on'); setTimeout(()=>s.classList.remove('on'),1800); }
+  actualizarBadgeNota(sap, centro, val.trim());
+}
+function actualizarBadgeNota(sap, centro, val){
+  document.querySelectorAll('#tb tr').forEach(tr=>{
+    const el = tr.querySelector('.sap-link');
+    if(!el||el.textContent.trim()!==sap) return;
+    const cb = tr.querySelector('.nota-badge');
+    if(val&&!cb){
+      const b=document.createElement('span');
+      b.className='nota-badge';b.textContent='📝';b.title='Ver nota';
+      b.onclick=(e)=>mostrarPopupNota(e,sap,centro);
+      el.parentNode.appendChild(b);
+    } else if(!val&&cb) cb.remove();
+    // Actualizar onclick si ya existía
+    else if(val&&cb) cb.onclick=(e)=>mostrarPopupNota(e,sap,centro);
+  });
+}
+function autoResizeTA(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,300)+'px';
+}
+function initNotaBadges(){
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('nota_')){
+        const p=k.split('_');
+        if(p.length>=3) actualizarBadgeNota(p[1],p[2],localStorage.getItem(k)||'');
+      }
+    }
+  }catch(e){}
+}
+// ── FECHA Y HORA DINÁMICA ────────────────────────────────────────
+function actualizarFecha(){
+  const now=new Date();
+  const mm=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const d=String(now.getDate()).padStart(2,'0');
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mi=String(now.getMinutes()).padStart(2,'0');
+  const el=document.getElementById('dtag');
+  if(el) el.textContent=`📅 ${d} ${mm[now.getMonth()]} ${now.getFullYear()} · ${hh}:${mi}`;
+}
+actualizarFecha();
+setInterval(actualizarFecha,60000);
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 build(STOCK_BASE);
